@@ -127,9 +127,7 @@ app.post('/login', async (req, res) => {
     // Login successful, return user data
     res.json({
       message: 'Login successful',
-      userId: user._id,
-      name: user.name,
-      email: user.email
+      data: user
     });
   } catch (error) {
     console.error(error);
