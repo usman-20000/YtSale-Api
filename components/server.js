@@ -261,15 +261,19 @@ app.delete('/add/:id', async (req, res) => {
 
 
 
-app.post('/register', async (req, res) => {
+app.patch("/register/:email", async (req, res) => {
   try {
-    const { name, email, password } = req.body;
-    const newRegister = new Register({ name, email, password });
-    await newRegister.save();
-    res.status(201).json(newRegister);
-  } catch (error) {
-    console.error('Error creating register', error);
-    res.status(500).send('Internal Server Error');
+    const { email } = req.params;
+    let updateData = req.body;
+    const updatedUser = await AdminRegister.findOneAndUpdate({ email }, updateData, {
+      new: true,
+    });
+    if (!updatedUser) {
+      return res.status(404).send({ message: "User not found" });
+    }
+    res.send(updatedUser);
+  } catch (e) {
+    res.status(400).send({ message: "Error updating user", error: e });
   }
 });
 
