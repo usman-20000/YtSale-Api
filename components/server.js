@@ -7,6 +7,7 @@ const cors = require('cors');
 const Add = require('./add');
 const Bill = require('./bill');
 const Category = require('./category');
+const Notification = require('./Notification');
 
 const PORT = process.env.PORT || 3000;
 
@@ -298,6 +299,37 @@ app.get('/register/:id', async (req, res) => {
   } catch (error) {
     console.error('Error fetching register', error);
     res.status(500).send('Internal Server Error');
+  }
+});
+
+
+app.post('/notifications', async (req, res) => {
+  try {
+    const notification = new Notification(req.body);
+    await notification.save();
+    res.json(notification);
+  } catch (error) {
+    res.status(500).json({ message: 'Error creating notification' });
+  }
+});
+
+app.get('/notifications/receiver/:id', async (req, res) => {
+  try {
+    const id = req.params.id;
+    const notifications = await Notification.find({ receiver: id });
+    res.json(notifications);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching notifications' });
+  }
+});
+
+app.delete('/notifications/:id', async (req, res) => {
+  try {
+    const id = req.params.id;
+    await Notification.findByIdAndRemove(id);
+    res.json({ message: 'Notification deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting notification' });
   }
 });
 
