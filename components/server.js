@@ -11,7 +11,6 @@ const Category = require('./category');
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
-
 app.use(cors());
 
 // app.post('/category', async (req, res) => {
@@ -135,6 +134,20 @@ app.post('/login', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
+app.delete("/login/:id", async (req, res) => {
+  try {
+    const user = await Register.findByIdAndDelete(req.params.id);
+    if (!user) {
+      return res.status(404).send("Data not found");
+    }
+    if (!req.params.id) {
+      res.status(201).send();
+    }
+  } catch (e) {
+    res.status(400).send(e);
+  }
+})
 
 app.post('/bill', async (req, res) => {
   try {
