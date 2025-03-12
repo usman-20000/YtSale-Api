@@ -283,6 +283,18 @@ app.get('/register', async (req, res) => {
   }
 });
 
+app.get('/register/:id', async (req, res) => {
+  try {
+
+    const id = req.params.id;
+    const register = await Register.findById(id);
+    res.json(register);
+  } catch (error) {
+    console.error('Error fetching register', error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
 });
