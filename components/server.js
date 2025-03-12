@@ -261,21 +261,23 @@ app.delete('/add/:id', async (req, res) => {
 
 
 
-app.patch("/register/:email", async (req, res) => {
+app.patch("/register/:id", async (req, res) => {
   try {
-    const { email } = req.params;
+    const id = req.params.id;
     let updateData = req.body;
-    const updatedUser = await AdminRegister.findOneAndUpdate({ email }, updateData, {
-      new: true,
-    });
+
+    const updatedUser = await Register.findByIdAndUpdate(id, updateData, { new: true });
+
     if (!updatedUser) {
       return res.status(404).send({ message: "User not found" });
     }
+
     res.send(updatedUser);
   } catch (e) {
-    res.status(400).send({ message: "Error updating user", error: e });
+    res.status(400).send({ message: "Error updating user", error: e.message });
   }
 });
+
 
 app.get('/register', async (req, res) => {
   try {
