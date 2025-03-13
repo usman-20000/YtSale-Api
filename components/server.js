@@ -22,11 +22,12 @@ cloudinary.config({
   api_secret: 'EZjxVBNlyqXGBvVeTkSL7ioX1Ok',
 });
 
-const upload = multer({ dest: './uploads/' });
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
 app.post('/upload', upload.single('image'), async (req, res) => {
   try {
-    const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+    const uploadResult = await cloudinary.uploader.upload(req.file.buffer, {
       public_id: 'my_image',
     });
     res.json(uploadResult);
