@@ -22,21 +22,17 @@ cloudinary.config({
   api_secret: 'EZjxVBNlyqXGBvVeTkSL7ioX1Ok',
 });
 
-const storage = multer.memoryStorage();
-const upload = multer({ storage });
+const upload = multer({ dest: './uploads/' });
 
-app.post("/upload", upload.single("file"), async (req, res) => {
+app.post('/upload', upload.single('image'), async (req, res) => {
   try {
-    const result = await cloudinary.uploader.upload_stream(
-      { folder: "uploads" },
-      (error, uploadResult) => {
-        if (error) return res.status(500).json({ error: error.message });
-
-        res.json({ imageUrl: uploadResult.secure_url }); // Cloudinary Image URL
-      }
-    ).end(req.file.buffer);
+    const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+      public_id: 'my_image',
+    });
+    res.json(uploadResult);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error(error);
+    res.status(500).json({ message: 'Error uploading image' });
   }
 });
 
