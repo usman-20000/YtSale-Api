@@ -22,10 +22,22 @@ cloudinary.config({
   api_secret: 'EZjxVBNlyqXGBvVeTkSL7ioX1Ok',
 });
 
-const storage = multer.memoryStorage();
-const upload = multer({ storage });
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5 MB
+  },
+});
 
 app.post('/upload', upload.single('image'), async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ message: 'No file uploaded' });
+  }
+
+  if (req.file.size > 5 * 1024 * 1024) {
+    return res.status(400).json({ message: 'File size exceeds limit' });
+  }
+
   try {
     const uploadResult = await cloudinary.uploader.upload(req.file.buffer, {
       public_id: 'my_image',
