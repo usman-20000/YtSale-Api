@@ -8,46 +8,12 @@ const Add = require('./add');
 const Bill = require('./bill');
 const Category = require('./category');
 const Notification = require('./Notification');
-const multer = require("multer");
-const { v2: cloudinary } = require("cloudinary");
 
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(cors());
 
-cloudinary.config({
-  cloud_name: 'dgh6eftpe',
-  api_key: '373579324827744',
-  api_secret: 'EZjxVBNlyqXGBvVeTkSL7ioX1Ok',
-});
-
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: {
-    fileSize: 5 * 1024 * 1024, // 5 MB
-  },
-});
-
-app.post('/upload', upload.single('image'), async (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ message: 'No file uploaded' });
-  }
-
-  if (req.file.size > 5 * 1024 * 1024) {
-    return res.status(400).json({ message: 'File size exceeds limit' });
-  }
-
-  try {
-    const uploadResult = await cloudinary.uploader.upload(req.file.buffer, {
-      public_id: 'my_image',
-    });
-    res.json(uploadResult);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Error uploading image' });
-  }
-});
 
 // app.post('/category', async (req, res) => {
 //   try {
