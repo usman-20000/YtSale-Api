@@ -8,11 +8,37 @@ const Add = require('./add');
 const Bill = require('./bill');
 const Category = require('./category');
 const Notification = require('./Notification');
+const multer = require("multer");
+const { v2: cloudinary } = require("cloudinary");
 
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(cors());
+
+cloudinary.config({
+  cloud_name: process.env.CLOUD_NAME,
+  api_key: process.env.API_KEY,
+  api_secret: process.env.API_SECRET,
+});
+
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
+
+app.post("/upload", upload.single("file"), async (req, res) => {
+  try {
+    const result = await cloudinary.uploader.upload_stream(
+      { folder: "uploads" },
+      (error, uploadResult) => {
+        if (error) return res.status(500).json({ error: error.message });
+
+        res.json({ imageUrl: uploadResult.secure_url }); // Cloudinary Image URL
+      }
+    ).end(req.file.buffer);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // app.post('/category', async (req, res) => {
 //   try {
