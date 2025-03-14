@@ -367,6 +367,16 @@ app.get('/listing', async (req, res) => {
   }
 });
 
+app.get('/listing/:userId', async (req, res) => {
+  try {
+    const account = await listing.find({ userId: req.params.userId });
+    res.json(account);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+
 app.delete('/listing/:id', async (req, res) => {
   try {
     const account = await listing.findByIdAndDelete(req.params.id);
