@@ -8,6 +8,7 @@ const Add = require('./add');
 const Bill = require('./bill');
 const Category = require('./category');
 const Notification = require('./Notification');
+const listing = require('./listing');
 
 const PORT = process.env.PORT || 3000;
 
@@ -344,6 +345,39 @@ app.delete('/notifications/:id', async (req, res) => {
     res.json({ message: 'Notification deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Error deleting notification' });
+  }
+});
+
+app.post('/listing', async (req, res) => {
+  try {
+    const account = new listing(req.body);
+    await account.save();
+    res.status(201).json(account);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+app.get('/listing', async (req, res) => {
+  try {
+    const account = await listing.find();
+    res.json(account);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+app.delete('/listing/:id', async (req, res) => {
+  try {
+    const account = await listing.findByIdAndDelete(req.params.id);
+    if (!account) {
+      return res.status(404).send("Data not found");
+    }
+    if (!req.params.id) {
+      res.status(201).send();
+    }
+  } catch (e) {
+    res.status(400).send(e);
   }
 });
 
