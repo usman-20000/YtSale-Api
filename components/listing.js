@@ -78,7 +78,11 @@ const accountSchema = new mongoose.Schema({
     termsAgree: {
         type: Boolean,
         required: true
-    }
+    },
+    status: {
+        type: String,
+        default: 'pending'
+    },
 }, { timestamps: true });
 
 const listing = mongoose.model('Account', accountSchema);
