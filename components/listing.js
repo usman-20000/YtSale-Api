@@ -1,9 +1,6 @@
 const mongoose = require('mongoose');
 
 const accountSchema = new mongoose.Schema({
-    image: {
-        type: String,
-    },
     accountName: {
         type: String,
         required: true
