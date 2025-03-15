@@ -376,6 +376,22 @@ app.get('/listing/:userId', async (req, res) => {
   }
 });
 
+app.patch('/listing/:id', async (req, res) => {
+  try {
+    const id = req.params.id;
+    if (!id) {
+      return res.status(400).send("ID is required");
+    }
+    const account = await listing.findByIdAndUpdate(id, req.body, { new: true });
+    if (!account) {
+      return res.status(404).send("Data not found");
+    }
+    res.send(account);
+  } catch (e) {
+    console.error(e);
+    res.status(500).send("Internal Server Error");
+  }
+});
 
 app.delete('/listing/:id', async (req, res) => {
   try {
