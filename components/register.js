@@ -32,6 +32,10 @@ const registerSchema = new mongoose.Schema({
   status: {
     type: String,
     default: "pending"
+  },
+  timestamp: {
+      type: Date,
+      default: Date.now
   }
 });
 
