@@ -369,8 +369,12 @@ app.get('/listing', async (req, res) => {
 
 app.get('/listing/edit/:id', async (req, res) => {
   try {
-    const account = await listing.findById(req.params.id);
+    const id = req.params.id;
+    if (!id) {
+      return res.status(400).json({ message: 'ID is required' });
+    }
 
+    const account = await listing.findById(id);
     if (!account) {
       return res.status(404).json({ message: 'Listing not found' });
     }
