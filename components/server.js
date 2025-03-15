@@ -367,6 +367,15 @@ app.get('/listing', async (req, res) => {
   }
 });
 
+app.get('/listing/edit/:id', async (req, res) => {
+  try {
+    const account = await listing.findById(req.params.id);
+    res.json(account);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 app.get('/listing/:userId', async (req, res) => {
   try {
     const account = await listing.find({ userId: req.params.userId });
