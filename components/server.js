@@ -370,11 +370,18 @@ app.get('/listing', async (req, res) => {
 app.get('/listing/edit/:id', async (req, res) => {
   try {
     const account = await listing.findById(req.params.id);
+
+    if (!account) {
+      return res.status(404).json({ message: 'Listing not found' });
+    }
+
     res.json(account);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Error fetching listing:", error);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 });
+
 
 app.get('/listing/:userId', async (req, res) => {
   try {
