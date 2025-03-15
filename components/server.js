@@ -350,13 +350,28 @@ app.delete('/notifications/:id', async (req, res) => {
 
 app.post('/listing', async (req, res) => {
   try {
+    const { userId } = req.body;
+
+    const user = await Register.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (user.status !== "approved") {
+      return res.status(403).json({ message: 'User not approved' });
+    }
+
     const account = new listing(req.body);
     await account.save();
     res.status(201).json(account);
+
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    console.error("Error in /listing:", error);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 });
+
 
 app.get('/listing', async (req, res) => {
   try {

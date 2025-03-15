@@ -17,17 +17,21 @@ const registerSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  address:{
-    type:String,
+  address: {
+    type: String,
     required: true
   },
-  email:{
-    type:String,
+  email: {
+    type: String,
     required: true
   },
-  password:{
-    type:String,
+  password: {
+    type: String,
     required: true
+  },
+  status: {
+    type: String,
+    default: "pending"
   }
 });
 
