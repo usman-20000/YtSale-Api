@@ -304,6 +304,23 @@ app.get('/register/:id', async (req, res) => {
   }
 });
 
+app.delete('/register/:id', async (req, res) => {
+  try {
+    const id = req.params.id;
+    if (!id) {
+      return res.status(400).json({ message: 'ID is required' });
+    }
+    const deleteUser = await Register.findByIdAndDelete(id);
+    if (!deleteUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.json(deleteUser);
+  } catch (error) {
+    console.error('Error fetching register', error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
 
 app.post('/notifications', async (req, res) => {
   try {
