@@ -375,7 +375,7 @@ app.post('/listing', async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    if (user.status !== "approved") {
+    if (user.status !== "Active") {
       return res.status(403).json({ message: 'User not approved' });
     }
 
