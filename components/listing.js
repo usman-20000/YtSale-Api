@@ -87,6 +87,12 @@ const accountSchema = new mongoose.Schema({
         type: String,
         default: 'pending'
     },
+    estimatedValue: {
+        type: Number,
+    },
+    valuationNote: {
+        type: String
+    },
 }, { timestamps: true });
 
 const listing = mongoose.model('Account', accountSchema);
