@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const accountSchema = new mongoose.Schema({
-    userId:{
+    userId: {
         type: String,
         required: true
     },
@@ -89,9 +89,11 @@ const accountSchema = new mongoose.Schema({
     },
     estimatedValue: {
         type: Number,
+        default: 0
     },
     valuationNote: {
-        type: String
+        type: String,
+        default: 'empty'
     },
 }, { timestamps: true });
 
