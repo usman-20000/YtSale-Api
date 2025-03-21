@@ -508,8 +508,16 @@ app.get('/chatList/:userId', async (req, res) => {
     const sentChats = await Chat.distinct("receiverId", { senderId: userId });
     const receivedChats = await Chat.distinct("senderId", { receiverId: userId });
     const uniqueUserIds = [...new Set([...sentChats, ...receivedChats])];
+    const chatList = await Promise.all(uniqueUserIds.map(async (chatUserId) => {
+      return await Chat.findOne({
+        $or: [
+          { senderId: userId, receiverId: chatUserId },
+          { senderId: chatUserId, receiverId: userId }
+        ]
+      }).sort({ createdAt: -1 }); // Get the latest message
+    }));
 
-    res.status(201).json(uniqueUserIds);
+    res.status(200).json(chatList.filter(chat => chat !== null));
 
   } catch (error) {
     console.error("Error in getting Chat:", error);
