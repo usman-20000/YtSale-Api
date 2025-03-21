@@ -9,6 +9,7 @@ const Bill = require('./bill');
 const Category = require('./category');
 const Notification = require('./Notification');
 const listing = require('./listing');
+const Chat = require('./chat');
 
 const PORT = process.env.PORT || 3000;
 
@@ -450,6 +451,77 @@ app.delete('/listing/:id', async (req, res) => {
     const account = await listing.findByIdAndDelete(req.params.id);
     if (!account) {
       return res.status(404).send("Data not found");
+    }
+    if (!req.params.id) {
+      res.status(201).send();
+    }
+  } catch (e) {
+    res.status(400).send(e);
+  }
+});
+
+
+app.post('/chat', async (req, res) => {
+  try {
+
+    const { text } = req.body;
+    if (!text) {
+      return res.status(403).json({ message: 'Enter Some text' });
+    }
+
+    const createChat = new Chat(req.body);
+    await createChat.save();
+    res.status(201).json(createChat);
+
+  } catch (error) {
+    console.error("Error in Chat:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+
+app.get('/singlechat/:receiverId', async (req, res) => {
+  try {
+
+    const receiverId = req.params.receiverId;
+    const senderId = req.body.senderId;
+
+    const findChat = await Chat.find({
+      $or: [
+        { senderId: senderId, receiverId: receiverId },
+        { senderId: receiverId, receiverId: senderId }
+      ]
+    })
+    res.status(201).json(findChat);
+
+  } catch (error) {
+    console.error("Error in Chat:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+app.get('/chatList/:userId', async (req, res) => {
+  try {
+
+    const userId = req.params.userId;
+
+    const sentChats = await Chat.distinct("receiverId", { senderId: userId });
+    const receivedChats = await Chat.distinct("senderId", { receiverId: userId });
+    const uniqueUserIds = [...new Set([...sentChats, ...receivedChats])];
+
+    res.status(201).json(uniqueUserIds);
+
+  } catch (error) {
+    console.error("Error in getting Chat:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+app.delete('/chat/:id', async (req, res) => {
+  try {
+    const account = await Chat.findById(req.params.id);
+    if (!account) {
+      return res.status(404).send("Chat not found");
     }
     if (!req.params.id) {
       res.status(201).send();

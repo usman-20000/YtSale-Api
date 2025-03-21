@@ -33,9 +33,12 @@ const registerSchema = new mongoose.Schema({
     type: String,
     default: "pending"
   },
+  online: {
+    Boolean: false,
+  },
   timestamp: {
-      type: Date,
-      default: new Date()
+    type: Date,
+    default: new Date()
   }
 });
 
