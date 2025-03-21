@@ -21,6 +21,10 @@ const chatScheme = new mongoose.Schema({
         type: String,
         required: true
     },
+    unread: {
+        type: Boolean,
+        default: true
+    }
 }, { timestamps: true });
 
 const Chat = mongoose.model('Chat', chatScheme);
