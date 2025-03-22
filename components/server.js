@@ -492,7 +492,7 @@ app.post('/singlechat/:receiverId', async (req, res) => {
         { senderId: receiverId, receiverId: senderId }
       ]
     })
-    res.status(201).json(findChat);
+    res.status(200).json(findChat);
 
   } catch (error) {
     console.error("Error in Chat:", error);
