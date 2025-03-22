@@ -480,7 +480,7 @@ app.post('/chat', async (req, res) => {
 });
 
 
-app.get('/singlechat/:receiverId', async (req, res) => {
+app.post('/singlechat/:receiverId', async (req, res) => {
   try {
 
     const receiverId = req.params.receiverId;
