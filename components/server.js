@@ -463,21 +463,29 @@ app.delete('/listing/:id', async (req, res) => {
 
 app.post('/chat', async (req, res) => {
   try {
+    const { senderId, receiverId, senderName, receiverName, text } = req.body;
 
-    const { text } = req.body;
-    if (!text) {
-      return res.status(403).json({ message: 'Enter Some text' });
+    if (!senderId || !receiverId || !senderName || !receiverName || !text) {
+      return res.status(400).json({ message: 'All fields are required' });
     }
 
-    const createChat = new Chat(req.body);
-    await createChat.save();
-    res.status(201).json(createChat);
+    const newChat = new Chat({
+      senderId,
+      receiverId,
+      senderName,
+      receiverName,
+      text
+    });
+
+    await newChat.save();
+    res.status(201).json(newChat);
 
   } catch (error) {
     console.error("Error in Chat:", error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
+
 
 
 app.post('/singlechat/:receiverId', async (req, res) => {
