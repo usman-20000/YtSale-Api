@@ -2,11 +2,14 @@ require('./conn');
 const express = require('express');
 const Register = require('../components/register');
 const app = express();
+const http = require('http');
+const server = http.createServer(app);
 const bcrypt = require('bcryptjs');
 const cors = require('cors');
 const Add = require('./add');
 const Bill = require('./bill');
 const Category = require('./category');
+const { Server } = require('socket.io');
 const Notification = require('./Notification');
 const listing = require('./listing');
 const Chat = require('./chat');
@@ -60,6 +63,39 @@ app.use(cors());
 //     res.status(500).json({ message: "Error adding subcategory", error });
 //   }
 // });
+
+const io = new Server(server, {
+  cors: {
+    origin: '*', // Adjust this for security in production
+    methods: ['GET', 'POST']
+  }
+});
+
+io.on('connection', (socket) => {
+  console.log(`User connected: ${socket.id}`);
+
+  // Join Room (Based on sender & receiver)
+  socket.on('join_room', ({ senderId, receiverId }) => {
+    const roomId = [senderId, receiverId].sort().join('_');
+    socket.join(roomId);
+    console.log(`User joined room: ${roomId}`);
+  });
+
+  socket.on('send_message', async (data) => {
+    const { senderId, receiverId, message } = data;
+    const newMessage = new Chat({ senderId, receiverId, message });
+
+    await newMessage.save();
+
+    const roomId = [senderId, receiverId].sort().join('_');
+    io.to(roomId).emit('receive_message', newMessage);
+    console.log(`Message sent: ${message}`);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('User disconnected:', socket.id);
+  });
+});
 
 
 app.post('/register', async (req, res) => {
