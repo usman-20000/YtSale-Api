@@ -79,18 +79,27 @@ io.on('connection', (socket) => {
     const roomId = [senderId, receiverId].sort().join('_');
     socket.join(roomId);
     console.log(`User joined room: ${roomId}`);
+    socket.emit('room_joined', { roomId });
   });
 
   socket.on('send_message', async (data) => {
-    const { senderId, receiverId, message } = data;
-    const newMessage = new Chat({ senderId, receiverId, message });
+    const { senderId, receiverId, senderName, receiverName, message } = data;
+
+    const newMessage = new Chat({
+        senderId,
+        receiverId,
+        senderName,
+        receiverName,
+        text: message, // ✅ Match schema field name
+        unread: true
+    });
 
     await newMessage.save();
 
     const roomId = [senderId, receiverId].sort().join('_');
     io.to(roomId).emit('receive_message', newMessage);
     console.log(`Message sent: ${message}`);
-  });
+});
 
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
