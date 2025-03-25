@@ -66,9 +66,11 @@ app.use(cors());
 
 const io = new Server(server, {
   cors: {
-    origin: '*', // Adjust this for security in production
-    methods: ['GET', 'POST']
-  }
+    origin: "*", 
+    methods: ["GET", "POST"],
+  },
+  path: "/socket.io/", 
+  transports: ["websocket"], 
 });
 
 io.on('connection', (socket) => {
