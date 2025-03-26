@@ -15,7 +15,7 @@ const Notification = require('./Notification');
 const listing = require('./listing');
 const Chat = require('./chat');
 
-const PORT = process.env.PORT || 4000;
+const PORT = 4000;
 
 app.use(express.json());
 app.use(cors());
