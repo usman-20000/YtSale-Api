@@ -65,7 +65,7 @@ app.use(cors());
 //   }
 // });
 
-const wss = new WebSocket.Server({ port: 8080 });
+const wss = new WebSocket.Server({ port: PORT + 1000 });
 
 const clients = new Map(); // Stores users and their WebSocket connections
 const rooms = new Map(); // Stores active chat rooms and connected users
@@ -128,7 +128,7 @@ wss.on('connection', (ws, req) => {
 
   ws.on('close', () => {
     console.log('WebSocket connection closed');
-    
+
     if (ws.userId && clients.has(ws.userId)) {
       clients.set(
         ws.userId,
