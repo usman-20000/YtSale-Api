@@ -15,7 +15,7 @@ const Notification = require('./Notification');
 const listing = require('./listing');
 const Chat = require('./chat');
 
-const PORT = 4000;
+const PORT = process.env.PORT || 4000;
 
 app.use(express.json());
 app.use(cors());
@@ -65,7 +65,8 @@ app.use(cors());
 //   }
 // });
 
-const wss = new WebSocket.Server({ port: PORT });
+const wss = new WebSocket.Server({ port: PORT+1 });
+
 
 const clients = new Map(); // Stores users and their WebSocket connections
 const rooms = new Map(); // Stores active chat rooms and connected users
