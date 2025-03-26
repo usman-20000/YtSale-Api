@@ -10,6 +10,7 @@ const Add = require('./add');
 const Bill = require('./bill');
 const Category = require('./category');
 const { Server } = require('socket.io');
+const WebSocket = require('ws');
 const Notification = require('./Notification');
 const listing = require('./listing');
 const Chat = require('./chat');
@@ -64,50 +65,89 @@ app.use(cors());
 //   }
 // });
 
-const io = new Server(server, {
-  cors: {
-    origin: "*", 
-    methods: ["GET", "POST"],
-  },
-  path: "/socket.io/", 
-  transports: ["websocket"], 
-});
+const wss = new WebSocket.Server({ port: PORT });
 
-io.on('connection', (socket) => {
-  console.log(`User connected: ${socket.id}`);
+const clients = new Map(); // Stores users and their WebSocket connections
+const rooms = new Map(); // Stores active chat rooms and connected users
 
-  // Join Room (Based on sender & receiver)
-  socket.on('join_room', ({ senderId, receiverId }) => {
-    const roomId = [senderId, receiverId].sort().join('_');
-    socket.join(roomId);
-    console.log(`User joined room: ${roomId}`);
-    socket.emit('room_joined', { roomId });
+wss.on('connection', (ws, req) => {
+  console.log('New WebSocket connection established');
+
+  ws.on('message', async (message) => {
+    try {
+      const data = JSON.parse(message);
+
+      if (data.type === 'join_room') {
+        const { senderId, receiverId } = data;
+        const roomId = [senderId, receiverId].sort().join('_');
+        ws.userId = senderId;
+        ws.roomId = roomId;
+
+        if (!clients.has(senderId)) {
+          clients.set(senderId, []);
+        }
+        clients.get(senderId).push(ws);
+
+        if (!rooms.has(roomId)) {
+          rooms.set(roomId, new Set());
+        }
+        rooms.get(roomId).add(ws);
+
+        console.log(`User ${senderId} joined room ${roomId}`);
+      }
+
+      if (data.type === 'send_message') {
+        const { senderId, receiverId, senderName, receiverName, message } = data;
+
+        const newMessage = new Chat({
+          senderId,
+          receiverId,
+          senderName,
+          receiverName,
+          text: message,
+          unread: true,
+        });
+
+        await newMessage.save();
+
+        const roomId = [senderId, receiverId].sort().join('_');
+        console.log(`Message sent to room ${roomId}: ${message}`);
+
+        if (rooms.has(roomId)) {
+          rooms.get(roomId).forEach((client) => {
+            if (client.readyState === WebSocket.OPEN) {
+              client.send(JSON.stringify({ type: 'receive_message', message: newMessage }));
+            }
+          });
+        }
+      }
+    } catch (err) {
+      console.error('Error processing message:', err);
+    }
   });
 
-  socket.on('send_message', async (data) => {
-    const { senderId, receiverId, senderName, receiverName, message } = data;
+  ws.on('close', () => {
+    console.log('WebSocket connection closed');
+    
+    if (ws.userId && clients.has(ws.userId)) {
+      clients.set(
+        ws.userId,
+        clients.get(ws.userId).filter((client) => client !== ws)
+      );
 
-    const newMessage = new Chat({
-        senderId,
-        receiverId,
-        senderName,
-        receiverName,
-        text: message, // ✅ Match schema field name
-        unread: true
-    });
+      if (clients.get(ws.userId).length === 0) {
+        clients.delete(ws.userId);
+      }
+    }
 
-    await newMessage.save();
-
-    const roomId = [senderId, receiverId].sort().join('_');
-    io.to(roomId).emit('receive_message', newMessage);
-    console.log(`Message sent: ${message}`);
-});
-
-  socket.on('disconnect', () => {
-    console.log('User disconnected:', socket.id);
+    if (ws.roomId && rooms.has(ws.roomId)) {
+      rooms.get(ws.roomId).delete(ws);
+      if (rooms.get(ws.roomId).size === 0) {
+        rooms.delete(ws.roomId);
+      }
+    }
   });
 });
-
 
 app.post('/register', async (req, res) => {
   try {
