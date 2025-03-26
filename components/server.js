@@ -65,7 +65,7 @@ app.use(cors());
 //   }
 // });
 
-const wss = new WebSocket.Server({ port: PORT });
+const wss = new WebSocket.Server({ port: 8080 });
 
 const clients = new Map(); // Stores users and their WebSocket connections
 const rooms = new Map(); // Stores active chat rooms and connected users
