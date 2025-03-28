@@ -480,7 +480,7 @@ app.get('/chatList/:userId', async (req, res) => {
       }).sort({ createdAt: -1 }); // Get the latest message
     }));
 
-    res.status(200).json(chatList.filter(chat => chat !== null));
+    res.status(200).json(chatList.filter(chat => chat !== null).reverse());
 
   } catch (error) {
     console.error("Error in getting Chat:", error);
