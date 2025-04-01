@@ -384,6 +384,8 @@ app.get('/listing/:userId', async (req, res) => {
   }
 });
 
+
+
 app.patch('/listing/:id', async (req, res) => {
   try {
     const id = req.params.id;
@@ -465,28 +467,47 @@ app.post('/singlechat/:receiverId', async (req, res) => {
 
 app.get('/chatList/:userId', async (req, res) => {
   try {
-
     const userId = req.params.userId;
 
+    // Get distinct chat participants
     const sentChats = await Chat.distinct("receiverId", { senderId: userId });
     const receivedChats = await Chat.distinct("senderId", { receiverId: userId });
+
+    // Unique chat users
     const uniqueUserIds = [...new Set([...sentChats, ...receivedChats])];
-    const chatList = await Promise.all(uniqueUserIds.map(async (chatUserId) => {
-      return await Chat.findOne({
-        $or: [
-          { senderId: userId, receiverId: chatUserId },
-          { senderId: chatUserId, receiverId: userId }
-        ]
-      }).sort({ createdAt: -1 }); // Get the latest message
-    }));
 
-    res.status(200).json(chatList.filter(chat => chat !== null).reverse());
+    // Find listings for the user
+    const myListingChats = await listing.find({ userId: userId });
 
+    // Fetch latest chats for each listing
+    let chatList = [];
+
+    for (const listingChat of myListingChats) {
+      const chats = await Promise.all(
+        uniqueUserIds.map(async (chatUserId) => {
+          return await Chat.findOne({
+            $or: [
+              { senderId: listingChat._id, receiverId: chatUserId },
+              { senderId: chatUserId, receiverId: listingChat._id }
+            ]
+          }).sort({ createdAt: -1 });
+        })
+      );
+
+      // Filter out null results and add to chatList
+      chatList.push(...chats.filter(chat => chat !== null));
+    }
+
+    // Sort final chat list by `createdAt`
+    chatList.sort((a, b) => b.createdAt - a.createdAt);
+
+    res.status(200).json(chatList);
   } catch (error) {
     console.error("Error in getting Chat:", error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
+
 
 app.delete('/chat/:id', async (req, res) => {
   try {
