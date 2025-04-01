@@ -478,17 +478,18 @@ app.get('/chatList/:userId', async (req, res) => {
 
     // Find listings for the user
     const myListingChats = await listing.find({ userId: userId });
+    const chatForListing = [userId, ...myListingChats.map(listing => listing._id)];
 
     // Fetch latest chats for each listing
     let chatList = [];
 
-    for (const listingChat of myListingChats) {
+    for (const listingChat of chatForListing) {
       const chats = await Promise.all(
         uniqueUserIds.map(async (chatUserId) => {
           return await Chat.findOne({
             $or: [
-              { senderId: listingChat._id, receiverId: chatUserId },
-              { senderId: chatUserId, receiverId: listingChat._id }
+              { senderId: listingChat, receiverId: chatUserId },
+              { senderId: chatUserId, receiverId: listingChat }
             ]
           }).sort({ createdAt: -1 });
         })
