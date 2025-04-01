@@ -384,7 +384,7 @@ app.get('/listing/:userId', async (req, res) => {
   }
 });
 
-app.get('/listing/:id', async (req, res) => {
+app.get('/singleListing/:id', async (req, res) => {
   try {
     const account = await listing.findById(req.params.id);
     if (!account) {
