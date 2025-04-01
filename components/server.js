@@ -384,6 +384,19 @@ app.get('/listing/:userId', async (req, res) => {
   }
 });
 
+app.get('/listing/:id', async (req, res) => {
+  try {
+    const account = await listing.findById(req.params.id);
+    if (!account) {
+      return res.status(404).json({ message: "Listing not found" });
+    }
+    res.json(account);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+
 
 
 app.patch('/listing/:id', async (req, res) => {
@@ -469,18 +482,14 @@ app.get('/chatList/:userId', async (req, res) => {
   try {
     const userId = req.params.userId;
 
-    // Get distinct chat participants
     const sentChats = await Chat.distinct("receiverId", { senderId: userId });
     const receivedChats = await Chat.distinct("senderId", { receiverId: userId });
 
-    // Unique chat users
     const uniqueUserIds = [...new Set([...sentChats, ...receivedChats])];
 
-    // Find listings for the user
     const myListingChats = await listing.find({ userId: userId });
     const chatForListing = [userId, ...myListingChats.map(listing => listing._id)];
 
-    // Fetch latest chats for each listing
     let chatList = [];
 
     for (const listingChat of chatForListing) {
@@ -495,11 +504,9 @@ app.get('/chatList/:userId', async (req, res) => {
         })
       );
 
-      // Filter out null results and add to chatList
       chatList.push(...chats.filter(chat => chat !== null));
     }
 
-    // Sort final chat list by `createdAt`
     chatList.sort((a, b) => b.createdAt - a.createdAt);
 
     res.status(200).json(chatList);
