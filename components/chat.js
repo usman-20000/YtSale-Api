@@ -9,6 +9,9 @@ const chatScheme = new mongoose.Schema({
         type: String,
         required: true
     },
+    listId: {
+        type: String,
+    },
     senderName: {
         type: String,
         required: true
