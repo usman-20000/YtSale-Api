@@ -490,37 +490,34 @@ app.get('/chatList/:userId/getChatList/:listid?', async (req, res) => {
     let sentChatListId = [];
     let receivedChatListId = [];
 
+    // If listid is provided, fetch distinct chat users based on listId
     if (listid) {
       sentChatListId = await Chat.distinct("receiverId", { senderId: userId, listId: listid });
       receivedChatListId = await Chat.distinct("senderId", { receiverId: userId, listId: listid });
     }
 
-    // Combine all unique user IDs
+    // Combine all unique chat user IDs
     const uniqueUserIds = [...new Set([...sentChats, ...receivedChats, ...sentChatListId, ...receivedChatListId])];
-
-    // Get listings associated with the user
-    const myListingChats = await listing.find({ userId: userId });
-    const chatForListing = [userId, ...myListingChats.map(listing => listing._id)];
 
     let chatList = [];
 
-    for (const listingChat of chatForListing) {
-      const chats = await Promise.all(
-        uniqueUserIds.map(async (chatUserId) => {
-          return Chat.findOne({
-            $or: [
-              { senderId: listingChat, receiverId: chatUserId },
-              { senderId: chatUserId, receiverId: listingChat }
-            ]
-          }).sort({ createdAt: -1 }); // Fetch latest message
+    // Fetch latest chat messages for each user
+    const chats = await Promise.all(
+      uniqueUserIds.map(async (chatUserId) => {
+        return await Chat.findOne({
+          $or: [
+            { senderId: userId, receiverId: chatUserId },
+            { senderId: chatUserId, receiverId: userId }
+          ],
+          ...(listid ? { listId: listid } : {}), 
         })
-      );
+        .sort({ createdAt: -1 })  // Sort by latest createdAt
+        .limit(1); // Ensure only one latest document is returned
+      })
+    );
 
-      chatList.push(...chats.filter(chat => chat !== null));
-    }
-
-    // Sort final chat list by `createdAt`
-    chatList.sort((a, b) => b.createdAt - a.createdAt);
+    // Remove null values and sort final chat list by `createdAt`
+    chatList = chats.filter(chat => chat !== null).sort((a, b) => b.createdAt - a.createdAt);
 
     res.status(200).json(chatList);
   } catch (error) {
