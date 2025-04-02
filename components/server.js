@@ -479,35 +479,38 @@ app.post('/singlechat/:receiverId', async (req, res) => {
   }
 });
 
-app.get('/chatList/:userId/getChatList', async (req, res) => {
+app.get('/chatList/:userId/getChatList/:listid?', async (req, res) => {
   try {
     const { userId, listid } = req.params;
 
-    // Get distinct chat participants
-    const sentChats = await Chat.distinct("receiverId", { senderId: userId });
-    const receivedChats = await Chat.distinct("senderId", { receiverId: userId });
+    // Fetch latest messages per user (with optional listId filtering)
+    const matchStage = {
+      $match: {
+        $or: [{ senderId: userId }, { receiverId: userId }],
+        ...(listid ? { listId: listid } : {}) // Apply listId filter only if provided
+      }
+    };
 
-    // Combine all unique chat user IDs
-    const uniqueUserIds = [...new Set([...sentChats, ...receivedChats])];
-
-    let chatList = [];
-
-    // Fetch latest chat messages for each user
-    const chats = await Promise.all(
-      uniqueUserIds.map(async (chatUserId) => {
-        return await Chat.findOne({
-          $or: [
-            { senderId: userId, receiverId: chatUserId },
-            { senderId: chatUserId, receiverId: userId }
-          ],
-        })
-        .sort({ createdAt: -1 })  // Sort by latest createdAt
-        .limit(1); // Ensure only one latest document is returned
-      })
-    );
-
-    // Remove null values and sort final chat list by `createdAt`
-    chatList = chats.filter(chat => chat !== null).sort((a, b) => b.createdAt - a.createdAt);
+    const chatList = await Chat.aggregate([
+      matchStage,
+      { $sort: { createdAt: -1 } }, // Sort messages in descending order
+      {
+        $group: {
+          _id: {
+            $cond: {
+              if: { $eq: ["$senderId", userId] },
+              then: "$receiverId",
+              else: "$senderId"
+            }
+          },
+          latestMessage: { $first: "$$ROOT" } // Get the latest message for each chat
+        }
+      },
+      {
+        $replaceRoot: { newRoot: "$latestMessage" }
+      },
+      { $sort: { createdAt: -1 } } // Sort final chat list
+    ]);
 
     res.status(200).json(chatList);
   } catch (error) {
@@ -515,6 +518,7 @@ app.get('/chatList/:userId/getChatList', async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
+
 
 
 app.delete('/chat/:id', async (req, res) => {
