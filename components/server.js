@@ -479,37 +479,40 @@ app.post('/singlechat/:receiverId', async (req, res) => {
   }
 });
 
-app.get('/chatList/:userId/getChatList/:listid?', async (req, res) => {
+app.get('/chatList/:userId', async (req, res) => {
   try {
-    const { userId, listid } = req.params;
-
-    // Fetch latest messages per user (with optional listId filtering)
-    const matchStage = {
-      $match: {
-        $or: [{ senderId: userId }, { receiverId: userId }],
-        ...(listid ? { listId: listid } : {}) // Apply listId filter only if provided
-      }
-    };
+    const { userId } = req.params;
 
     const chatList = await Chat.aggregate([
-      matchStage,
-      { $sort: { createdAt: -1 } }, // Sort messages in descending order
       {
-        $group: {
-          _id: {
-            $cond: {
-              if: { $eq: ["$senderId", userId] },
-              then: "$receiverId",
-              else: "$senderId"
-            }
-          },
-          latestMessage: { $first: "$$ROOT" } // Get the latest message for each chat
+        $match: {
+          $or: [
+            { senderId: userId },
+            { receiverId: userId }
+          ]
         }
       },
       {
-        $replaceRoot: { newRoot: "$latestMessage" }
+        $sort: { createdAt: -1 }
       },
-      { $sort: { createdAt: -1 } } // Sort final chat list
+      {
+        $group: {
+          _id: {
+            $cond: [
+              { $eq: ["$senderId", userId] },
+              "$receiverId",
+              "$senderId"
+            ]
+          },
+          latestChat: { $first: "$$ROOT" }
+        }
+      },
+      {
+        $replaceRoot: { newRoot: "$latestChat" }
+      },
+      {
+        $sort: { createdAt: -1 }
+      }
     ]);
 
     res.status(200).json(chatList);
@@ -518,8 +521,6 @@ app.get('/chatList/:userId/getChatList/:listid?', async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
-
-
 
 app.delete('/chat/:id', async (req, res) => {
   try {
