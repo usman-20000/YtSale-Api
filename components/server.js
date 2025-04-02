@@ -479,15 +479,26 @@ app.post('/singlechat/:receiverId', async (req, res) => {
   }
 });
 
-app.get('/chatList/:userId', async (req, res) => {
+app.get('/chatList/:userId/getChatList/:listid?', async (req, res) => {
   try {
-    const userId = req.params.userId;
+    const { userId, listid } = req.params;
 
+    // Get distinct chat participants
     const sentChats = await Chat.distinct("receiverId", { senderId: userId });
     const receivedChats = await Chat.distinct("senderId", { receiverId: userId });
 
-    const uniqueUserIds = [...new Set([...sentChats, ...receivedChats])];
+    let sentChatListId = [];
+    let receivedChatListId = [];
 
+    if (listid) {
+      sentChatListId = await Chat.distinct("receiverId", { senderId: userId, listId: listid });
+      receivedChatListId = await Chat.distinct("senderId", { receiverId: userId, listId: listid });
+    }
+
+    // Combine all unique user IDs
+    const uniqueUserIds = [...new Set([...sentChats, ...receivedChats, ...sentChatListId, ...receivedChatListId])];
+
+    // Get listings associated with the user
     const myListingChats = await listing.find({ userId: userId });
     const chatForListing = [userId, ...myListingChats.map(listing => listing._id)];
 
@@ -496,18 +507,19 @@ app.get('/chatList/:userId', async (req, res) => {
     for (const listingChat of chatForListing) {
       const chats = await Promise.all(
         uniqueUserIds.map(async (chatUserId) => {
-          return await Chat.findOne({
+          return Chat.findOne({
             $or: [
               { senderId: listingChat, receiverId: chatUserId },
               { senderId: chatUserId, receiverId: listingChat }
             ]
-          }).sort({ createdAt: -1 });
+          }).sort({ createdAt: -1 }); // Fetch latest message
         })
       );
 
       chatList.push(...chats.filter(chat => chat !== null));
     }
 
+    // Sort final chat list by `createdAt`
     chatList.sort((a, b) => b.createdAt - a.createdAt);
 
     res.status(200).json(chatList);
