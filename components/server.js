@@ -479,7 +479,7 @@ app.post('/singlechat/:receiverId', async (req, res) => {
   }
 });
 
-app.get('/chatList/:userId/getChatList/:listid?', async (req, res) => {
+app.get('/chatList/:userId/getChatList', async (req, res) => {
   try {
     const { userId, listid } = req.params;
 
@@ -487,17 +487,8 @@ app.get('/chatList/:userId/getChatList/:listid?', async (req, res) => {
     const sentChats = await Chat.distinct("receiverId", { senderId: userId });
     const receivedChats = await Chat.distinct("senderId", { receiverId: userId });
 
-    let sentChatListId = [];
-    let receivedChatListId = [];
-
-    // If listid is provided, fetch distinct chat users based on listId
-    if (listid) {
-      sentChatListId = await Chat.distinct("receiverId", { senderId: userId, listId: listid });
-      receivedChatListId = await Chat.distinct("senderId", { receiverId: userId, listId: listid });
-    }
-
     // Combine all unique chat user IDs
-    const uniqueUserIds = [...new Set([...sentChats, ...receivedChats, ...sentChatListId, ...receivedChatListId])];
+    const uniqueUserIds = [...new Set([...sentChats, ...receivedChats])];
 
     let chatList = [];
 
@@ -509,7 +500,6 @@ app.get('/chatList/:userId/getChatList/:listid?', async (req, res) => {
             { senderId: userId, receiverId: chatUserId },
             { senderId: chatUserId, receiverId: userId }
           ],
-          ...(listid ? { listId: listid } : {}), 
         })
         .sort({ createdAt: -1 })  // Sort by latest createdAt
         .limit(1); // Ensure only one latest document is returned
