@@ -32,7 +32,6 @@ const accountSchema = new mongoose.Schema({
     },
     accountPrice: {
         type: Number,
-        required: true,
         min: 0
     },
     contactEmail: {
