@@ -442,7 +442,6 @@ app.post('/chat', async (req, res) => {
     const newChat = new Chat({
       senderId,
       receiverId,
-      listId,
       senderName,
       receiverName,
       text
