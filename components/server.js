@@ -433,7 +433,7 @@ app.delete('/listing/:id', async (req, res) => {
 
 app.post('/chat', async (req, res) => {
   try {
-    const { senderId, receiverId, listId, senderName, receiverName, text } = req.body;
+    const { senderId, receiverId, senderName, receiverName, text } = req.body;
 
     if (!senderId || !receiverId || !senderName || !receiverName || !text) {
       return res.status(400).json({ message: 'All fields are required' });
