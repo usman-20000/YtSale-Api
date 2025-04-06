@@ -462,7 +462,12 @@ app.put('/mark-read', async (req, res) => {
 
   try {
     const result = await Chat.updateMany(
-      { senderId, receiverId, unread: true },
+      {
+        $or: [
+          { senderId, receiverId, unread: true },
+          { senderId: receiverId, receiverId: senderId, unread: true }
+        ]
+      },
       { $set: { unread: false } }
     );
 
@@ -471,6 +476,7 @@ app.put('/mark-read', async (req, res) => {
     res.status(500).json({ error: 'Failed to mark messages as read' });
   }
 });
+
 
 
 app.post('/singlechat/:receiverId', async (req, res) => {
