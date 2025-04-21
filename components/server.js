@@ -432,10 +432,11 @@ app.delete('/listing/:id', async (req, res) => {
 
 
 app.post('/chat', async (req, res) => {
+  console.log('📩 /chat payload:', req.body);
   try {
-    const { senderId, receiverId, senderName, receiverName, text } = req.body;
+    const { senderId, receiverId, senderName, receiverName, text, image } = req.body;
 
-    if (!senderId || !receiverId || !senderName || !receiverName || !text) {
+    if (!senderId || !receiverId || !senderName || !receiverName) {
       return res.status(400).json({ message: 'All fields are required' });
     }
 
@@ -444,7 +445,8 @@ app.post('/chat', async (req, res) => {
       receiverId,
       senderName,
       receiverName,
-      text
+      text: text || null,
+      image: image || null
     });
 
     await newChat.save();

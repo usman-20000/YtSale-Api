@@ -22,7 +22,9 @@ const chatScheme = new mongoose.Schema({
     },
     text: {
         type: String,
-        required: true
+    },
+    image: {
+        type: String,
     },
     unread: {
         type: Boolean,
