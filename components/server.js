@@ -288,6 +288,31 @@ app.post('/notifications', async (req, res) => {
   }
 });
 
+app.post('/send-notification-to-all', async (req, res) => {
+
+  const { sender, heading, subHeading, path } = req.body;
+
+  try {
+    const users = await Register.find();
+
+    const notifications = users.map(user => ({
+      sender,
+      receiver: user._id.toString(),
+      heading,
+      subHeading,
+      path,
+    }));
+
+    // Insert all notifications
+    await Notification.insertMany(notifications);
+
+    res.status(200).json({ message: 'Notifications sent to all users' });
+  } catch (error) {
+    console.error('Error sending notifications:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 app.patch('/notifications/:id', async (req, res) => {
   try {
     const id = req.params.id;
@@ -304,7 +329,7 @@ app.patch('/notifications/:id', async (req, res) => {
 app.get('/notifications/receiver/:id', async (req, res) => {
   try {
     const id = req.params.id;
-    const notifications = await Notification.find({ receiver: id });
+    const notifications = await Notification.find({ receiver: id }).sort({ _id: -1 });
     res.json(notifications);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching notifications' });
@@ -556,6 +581,8 @@ app.delete('/chat/:id', async (req, res) => {
     res.status(400).send(e);
   }
 });
+
+
 
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
